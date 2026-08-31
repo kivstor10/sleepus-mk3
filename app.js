@@ -41,6 +41,14 @@
     return error?.message || String(error);
   }
 
+  function formatConnectionError(error) {
+    const message = formatError(error);
+    if (/claimInterface|claim interface/i.test(message)) {
+      return "The DFU interface is in use. Close other updater tabs and AT32IDE tools, unplug the Sleepus MK3, then reconnect it in BOOT0 mode.";
+    }
+    return message;
+  }
+
   function log(message, level = "INFO") {
     const timestamp = new Date().toLocaleTimeString([], { hour12: false });
     statusConsole.value += `[${timestamp}] ${level.padEnd(5)} ${message}\n`;
@@ -214,7 +222,7 @@
         await openSelectedDevice(authorizedDevice);
         return;
       } catch (error) {
-        log(`Automatic reconnect failed: ${formatError(error)}. Opening Chrome's device window instead.`, "WARN");
+        log(`Automatic reconnect failed: ${formatConnectionError(error)} Opening Chrome's device window instead.`, "WARN");
       }
     }
 
@@ -373,7 +381,7 @@
         await connectWithPrompt();
       }
     } catch (error) {
-      log(formatError(error), "ERROR");
+      log(formatConnectionError(error), "ERROR");
       clearDeviceState();
     }
   });
@@ -413,6 +421,10 @@
     connectButton.disabled = true;
     setConnectionState("WebUSB unavailable");
   }
+
+  window.addEventListener("pagehide", () => {
+    if (device?.device_?.opened) device.close();
+  });
 
   if (window.lucide) window.lucide.createIcons();
   log("Updater ready. Enter BOOT0 mode, then connect the device.");
