@@ -166,7 +166,12 @@
 
     const settings = interfaces.find(item => item.name?.startsWith("@")) || interfaces[0];
     let activeDevice = new dfu.Device(usbDevice, settings);
-    await activeDevice.open();
+    try {
+      await activeDevice.open();
+    } catch (error) {
+      try { await usbDevice.close(); } catch (_) { /* Opening may have failed before the device was claimed. */ }
+      throw error;
+    }
 
     const properties = await readDfuProperties(activeDevice);
     transferSize = properties?.wTransferSize || DEFAULT_TRANSFER_SIZE;
@@ -205,8 +210,12 @@
     );
     if (authorizedDevice) {
       log("Reconnecting to the previously approved Sleepus MK3.");
-      await openSelectedDevice(authorizedDevice);
-      return;
+      try {
+        await openSelectedDevice(authorizedDevice);
+        return;
+      } catch (error) {
+        log(`Automatic reconnect failed: ${formatError(error)}. Opening Chrome's device window instead.`, "WARN");
+      }
     }
 
     log("In Chrome's device window, select 'DFU in FS Mode - Paired', then click Connect.");
@@ -253,6 +262,43 @@
       expectedDisconnect = true;
       log("Bootloader reset after removing read protection; waiting for DFU to return.", "WARN");
       return true;
+    }
+  }
+
+  async function writeFirmware(activeDevice, image) {
+    let bytesSent = 0;
+    let address = FLASH_BASE;
+
+    while (bytesSent < image.byteLength) {
+      const chunkSize = Math.min(transferSize, image.byteLength - bytesSent);
+      await activeDevice.dfuseCommand(dfuse.SET_ADDRESS, address, 4);
+      const bytesWritten = await activeDevice.download(image.slice(bytesSent, bytesSent + chunkSize), 2);
+      const status = await activeDevice.poll_until_idle(dfu.dfuDNLOAD_IDLE);
+      if (status.status !== dfu.STATUS_OK) {
+        throw new Error(`Firmware write failed at 0x${address.toString(16)} with DFU status ${status.status}.`);
+      }
+      if (bytesWritten !== chunkSize) {
+        throw new Error(`Short firmware write at 0x${address.toString(16)}: ${bytesWritten} of ${chunkSize} bytes.`);
+      }
+
+      bytesSent += bytesWritten;
+      address += bytesWritten;
+      setProgress("Writing firmware", 25 + (bytesSent / image.byteLength) * 70);
+    }
+
+    log(`Wrote ${bytesSent.toLocaleString()} bytes. Manifesting firmware.`);
+    await activeDevice.dfuseCommand(dfuse.SET_ADDRESS, FLASH_BASE, 4);
+    await activeDevice.download(new ArrayBuffer(), 0);
+    try {
+      const status = await activeDevice.poll_until(state =>
+        state === dfu.dfuMANIFEST || state === dfu.dfuMANIFEST_WAIT_RESET || state === dfu.dfuIDLE
+      );
+      if (status.status !== dfu.STATUS_OK) {
+        throw new Error(`Firmware manifestation failed with DFU status ${status.status}.`);
+      }
+    } catch (error) {
+      if (!isDisconnectError(error)) throw error;
+      log("Device reset after firmware manifestation.");
     }
   }
 
@@ -303,7 +349,7 @@
       device.startAddress = FLASH_BASE;
       log("Writing firmware at 0x08000000.");
       setProgress("Writing firmware", 25);
-      await device.do_download(transferSize, image, false);
+      await writeFirmware(device, image);
       setProgress("Update complete", 100);
       log("Firmware update complete. The device may now restart.");
       setConnectionState("Update complete", "connected");
