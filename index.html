@@ -35,6 +35,25 @@
       </div>
     </section>
 
+    <section class="driver-support" aria-labelledby="driver-heading">
+      <div class="driver-copy">
+        <i data-lucide="shield-check" aria-hidden="true"></i>
+        <div>
+          <h2 id="driver-heading">Windows driver setup</h2>
+          <p>If the updater cannot claim the DFU interface, use Zadig to install WinUSB for <strong>DFU in FS Mode</strong> (2E3C:DF11).</p>
+        </div>
+      </div>
+      <a class="button button-secondary" href="https://github.com/pbatard/libwdi/releases/download/v1.5.1/zadig-2.9.exe" target="_blank" rel="noopener noreferrer">
+        <i data-lucide="download" aria-hidden="true"></i>
+        <span>Download Zadig 2.9</span>
+      </a>
+      <ol class="driver-steps">
+        <li>Run Zadig and choose <strong>Options &gt; List All Devices</strong>.</li>
+        <li>Select <strong>DFU in FS Mode</strong> and confirm USB ID <strong>2E3C:DF11</strong>.</li>
+        <li>Choose <strong>WinUSB</strong>, then click <strong>Install Driver</strong> or <strong>Replace Driver</strong>.</li>
+      </ol>
+    </section>
+
     <section class="workspace" aria-label="Firmware update controls">
       <div class="steps">
         <div class="step">
