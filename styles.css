@@ -86,6 +86,35 @@ p { margin-bottom: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .instruction h2 { margin-bottom: 2px; }
 .instruction p { color: #594b1d; font-size: 14px; }
 
+.driver-support {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 15px 24px;
+  margin: 0 0 26px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-left: 5px solid var(--green);
+  background: var(--surface);
+}
+.driver-copy { display: flex; min-width: 0; align-items: flex-start; gap: 14px; }
+.driver-copy > svg { flex: 0 0 auto; width: 24px; height: 24px; color: var(--green); }
+.driver-copy h2 { margin-bottom: 2px; }
+.driver-copy strong, .driver-steps strong { color: var(--ink); }
+.driver-steps {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 14px 0 0 28px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.driver-steps li { padding-left: 4px; }
+
 .workspace { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(330px, 0.65fr); border: 1px solid var(--line); background: var(--surface); }
 .steps { min-width: 0; }
 .step { display: grid; grid-template-columns: 66px 1fr; min-height: 145px; border-bottom: 1px solid var(--line); }
@@ -178,6 +207,8 @@ footer { display: flex; justify-content: space-between; gap: 20px; padding-top: 
   .masthead { align-items: flex-start; flex-direction: column; }
   .connection-state { padding: 0; }
   .instruction { align-items: flex-start; }
+  .driver-support { grid-template-columns: 1fr; }
+  .driver-steps { grid-template-columns: 1fr; }
   .step { grid-template-columns: 42px 1fr; }
   .step-index { padding-top: 28px; }
   .step-body { padding: 24px 18px; }
