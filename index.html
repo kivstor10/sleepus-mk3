@@ -3,154 +3,56 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f3f5f2">
-  <title>Sleepus MK3 Firmware Updater</title>
+  <meta name="theme-color" content="#0b100e">
+  <title>Sleepus MK3 | Xbox Hardware Macro Device</title>
+  <meta name="description" content="Sleepus MK3 is custom AT32 hardware with an OLED display and cloud OTA updates.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-  <script defer src="https://cdn.jsdelivr.net/gh/devanlai/webdfu@gh-pages/dfu-util/dfu.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/gh/devanlai/webdfu@gh-pages/dfu-util/dfuse.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/lucide@0.468.0/dist/umd/lucide.min.js"></script>
-  <script defer src="app.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="landing.css">
+  <script defer src="landing.js"></script>
 </head>
 <body>
-  <main class="shell">
-    <header class="masthead">
-      <div>
-        <p class="eyebrow">SLEEPUS / SERVICE UTILITY</p>
-        <h1>MK3 Firmware Updater</h1>
-      </div>
-      <div class="connection-state" aria-live="polite">
-        <span class="state-dot" id="stateDot"></span>
-        <span id="connectionState">Not connected</span>
-      </div>
-    </header>
+  <main>
+    <nav class="nav" aria-label="Main navigation">
+      <a class="brand" href="/" aria-label="Sleepus home">SLEEPUS<span>MK3</span></a>
+      <a class="flasher-link" href="updater.html">Firmware Flasher <span aria-hidden="true">&#8599;</span></a>
+    </nav>
 
-    <section class="instruction" aria-labelledby="boot-heading">
-      <i data-lucide="circle-power" aria-hidden="true"></i>
-      <div>
-        <h2 id="boot-heading">Enter update mode</h2>
-        <p>To enter update mode, hold the BOOT0 button on your Sleepus MK3 while plugging in the USB cable.</p>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">BATCH 1 / 100 UNITS</p>
+        <h1 id="hero-title">Sleepus MK3</h1>
+        <p class="product-type">Xbox Hardware Macro Device</p>
+        <p class="value-prop">Custom AT32 hardware macro engine with OLED display and cloud OTA updates. Undetectable. Zero bloatware.</p>
+        <p class="availability">Batch 1 Pre-Orders Opening Soon <span>XBOX EXCLUSIVE</span></p>
+
+        <div class="waitlist-panel">
+          <form id="waitlistForm" novalidate>
+            <label for="email">Reserve your place</label>
+            <div class="form-row">
+              <input id="email" name="email" type="email" autocomplete="email" inputmode="email" placeholder="you@email.com" required aria-describedby="formMessage">
+              <button id="submitButton" type="submit">Join Batch 1 Waitlist</button>
+            </div>
+            <p class="form-message" id="formMessage" aria-live="polite"></p>
+          </form>
+          <section class="success-card" id="successCard" hidden aria-live="polite">
+            <p class="success-kicker">WAITLIST CONFIRMED</p>
+            <h2>You're locked in.</h2>
+            <p>Sleepus MK3 is currently Xbox-exclusive. We'll email you the exact minute Batch 1 drops.</p>
+          </section>
+        </div>
+      </div>
+
+      <div class="device-visual" aria-hidden="true">
+        <div class="device-label">SLEEPUS / MK3</div>
+        <div class="screen"><span>READY</span><i></i><i></i><i></i></div>
+        <div class="device-line line-one"></div>
+        <div class="device-line line-two"></div>
+        <div class="device-port"></div>
+        <div class="device-caption">AT32 / OLED / OTA</div>
       </div>
     </section>
-
-    <section class="driver-support" aria-labelledby="driver-heading">
-      <div class="driver-copy">
-        <i data-lucide="shield-check" aria-hidden="true"></i>
-        <div>
-          <h2 id="driver-heading">Windows driver setup</h2>
-          <p>If the updater cannot claim the DFU interface, use Zadig to install WinUSB for <strong>DFU in FS Mode</strong> (2E3C:DF11).</p>
-        </div>
-      </div>
-      <a class="button button-secondary" href="https://github.com/pbatard/libwdi/releases/download/v1.5.1/zadig-2.9.exe" target="_blank" rel="noopener noreferrer">
-        <i data-lucide="download" aria-hidden="true"></i>
-        <span>Download Zadig 2.9</span>
-      </a>
-      <ol class="driver-steps">
-        <li>Run Zadig and choose <strong>Options &gt; List All Devices</strong>.</li>
-        <li>Select <strong>DFU in FS Mode</strong> and confirm USB ID <strong>2E3C:DF11</strong>.</li>
-        <li>Choose <strong>WinUSB</strong>, then click <strong>Install Driver</strong> or <strong>Replace Driver</strong>.</li>
-      </ol>
-    </section>
-
-    <section class="workspace" aria-label="Firmware update controls">
-      <div class="steps">
-        <div class="step">
-          <div class="step-index">01</div>
-          <div class="step-body">
-            <div class="step-heading">
-              <div>
-                <h2>Connect bootloader</h2>
-                <p>Artery factory DFU / VID 2E3C / PID DF11</p>
-              </div>
-              <button class="button button-primary" id="connectButton" type="button">
-                <i data-lucide="usb" aria-hidden="true"></i>
-                <span>Connect Sleepus MK3</span>
-              </button>
-            </div>
-            <div class="chooser-note">
-              <i data-lucide="mouse-pointer-click" aria-hidden="true"></i>
-              <span>First connection: select <strong>DFU in FS Mode - Paired</strong> in Chrome's window, then click Connect.</span>
-            </div>
-            <dl class="device-details" id="deviceDetails" hidden>
-              <div><dt>Device</dt><dd id="deviceName">-</dd></div>
-              <div><dt>Interface</dt><dd id="interfaceName">-</dd></div>
-              <div><dt>Transfer size</dt><dd id="transferSize">-</dd></div>
-            </dl>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-index">02</div>
-          <div class="step-body">
-            <div class="step-heading">
-              <div>
-                <h2>Select firmware</h2>
-                <p>Raw binary image linked for address 0x08000000</p>
-              </div>
-              <div class="firmware-actions">
-                <button class="button button-primary" id="latestFirmwareButton" type="button" hidden>
-                  <i data-lucide="cloud-download" aria-hidden="true"></i>
-                  <span>Use latest release</span>
-                </button>
-                <label class="button button-secondary" for="firmwareFile">
-                  <i data-lucide="file-up" aria-hidden="true"></i>
-                  <span>Choose .bin</span>
-                </label>
-              </div>
-              <input id="firmwareFile" type="file" accept=".bin,application/octet-stream" hidden>
-            </div>
-            <p class="release-status" id="latestFirmwareStatus">Checking for the latest firmware...</p>
-            <div class="file-row" id="fileRow" hidden>
-              <i data-lucide="file-check-2" aria-hidden="true"></i>
-              <div><strong id="fileName">-</strong><span id="fileSize">-</span></div>
-              <button class="icon-button" id="clearFileButton" type="button" title="Remove selected firmware" aria-label="Remove selected firmware">
-                <i data-lucide="x" aria-hidden="true"></i>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="step">
-          <div class="step-index">03</div>
-          <div class="step-body">
-            <div class="step-heading flash-heading">
-              <div>
-                <h2>Erase and flash</h2>
-                <p>Mass erase removes RDP Level 1 before writing</p>
-              </div>
-              <button class="button button-accent" id="flashButton" type="button" disabled>
-                <i data-lucide="zap" aria-hidden="true"></i>
-                <span>Flash Firmware</span>
-              </button>
-            </div>
-            <div class="progress-region" aria-live="polite">
-              <div class="progress-labels"><span id="progressStage">Ready</span><span id="progressValue">0%</span></div>
-              <progress id="progressBar" value="0" max="100">0%</progress>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <aside class="console-panel" aria-labelledby="console-heading">
-        <div class="console-header">
-          <div>
-            <span class="console-kicker">DFU SESSION</span>
-            <h2 id="console-heading">Status console</h2>
-          </div>
-          <button class="icon-button console-clear" id="clearConsoleButton" type="button" title="Clear console" aria-label="Clear console">
-            <i data-lucide="trash-2" aria-hidden="true"></i>
-          </button>
-        </div>
-        <textarea id="statusConsole" readonly spellcheck="false" aria-label="Firmware update status log"></textarea>
-      </aside>
-    </section>
-
-    <footer>
-      <span>WebUSB requires Chrome or Edge over HTTPS.</span>
-      <span>Do not disconnect power while writing.</span>
-    </footer>
   </main>
 </body>
 </html>
