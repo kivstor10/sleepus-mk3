@@ -1,0 +1,14 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "sleepus-waitlist",
+	"main": "src/index.js",
+	"compatibility_date": "2025-09-12",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "sleepus-waitlist",
+			"database_id": "d9516d95-06a4-43b9-9961-dcf91ff33ed0",
+			"remote": true
+		}
+	]
+}
