@@ -101,7 +101,7 @@
         throw new Error("Invalid firmware manifest");
       }
       latestFirmware = manifest;
-      latestFirmwareStatus.textContent = `Latest release: ${manifest.version} / ${manifest.size.toLocaleString()} bytes`;
+      latestFirmwareStatus.textContent = `Latest firmware: ${manifest.version}`;
       latestFirmwareButton.hidden = false;
     } catch (error) {
       latestFirmwareStatus.textContent = "No published release yet. Choose a local .bin file.";
@@ -123,8 +123,8 @@
       if (digest !== latestFirmware.sha256.toLowerCase()) throw new Error("Downloaded firmware failed SHA-256 verification.");
 
       const file = new File([data], latestFirmware.file, { type: "application/octet-stream" });
-      selectFirmware(file, `${latestFirmware.version} / ${file.size.toLocaleString()} bytes / SHA-256 verified`);
-      latestFirmwareStatus.textContent = `Latest release: ${latestFirmware.version} / verified`;
+      selectFirmware(file, "Ready to install");
+      latestFirmwareStatus.textContent = `Latest firmware: ${latestFirmware.version}`;
       log(`Selected and verified published firmware ${latestFirmware.version}.`);
     } catch (error) {
       latestFirmwareStatus.textContent = `Could not load ${latestFirmware.version}.`;

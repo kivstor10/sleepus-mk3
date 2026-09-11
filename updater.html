@@ -18,7 +18,7 @@
   <main class="shell">
     <header class="masthead">
       <div>
-        <p class="eyebrow">SLEEPUS / SERVICE UTILITY</p>
+        <p class="eyebrow">SLEEPUS MK3</p>
         <h1>MK3 Firmware Updater</h1>
       </div>
       <div class="connection-state" aria-live="polite">
@@ -30,28 +30,9 @@
     <section class="instruction" aria-labelledby="boot-heading">
       <i data-lucide="circle-power" aria-hidden="true"></i>
       <div>
-        <h2 id="boot-heading">Enter update mode</h2>
-        <p>To enter update mode, hold the BOOT0 button on your Sleepus MK3 while plugging in the USB cable.</p>
+        <h2 id="boot-heading">Start here</h2>
+        <p>Hold BOOT0 while connecting your Sleepus MK3 with USB.</p>
       </div>
-    </section>
-
-    <section class="driver-support" aria-labelledby="driver-heading">
-      <div class="driver-copy">
-        <i data-lucide="shield-check" aria-hidden="true"></i>
-        <div>
-          <h2 id="driver-heading">Windows driver setup</h2>
-          <p>If the updater cannot claim the DFU interface, use Zadig to install WinUSB for <strong>DFU in FS Mode</strong> (2E3C:DF11).</p>
-        </div>
-      </div>
-      <a class="button button-secondary" href="https://github.com/pbatard/libwdi/releases/download/v1.5.1/zadig-2.9.exe" target="_blank" rel="noopener noreferrer">
-        <i data-lucide="download" aria-hidden="true"></i>
-        <span>Download Zadig 2.9</span>
-      </a>
-      <ol class="driver-steps">
-        <li>Run Zadig and choose <strong>Options &gt; List All Devices</strong>.</li>
-        <li>Select <strong>DFU in FS Mode</strong> and confirm USB ID <strong>2E3C:DF11</strong>.</li>
-        <li>Choose <strong>WinUSB</strong>, then click <strong>Install Driver</strong> or <strong>Replace Driver</strong>.</li>
-      </ol>
     </section>
 
     <section class="workspace" aria-label="Firmware update controls">
@@ -61,17 +42,13 @@
           <div class="step-body">
             <div class="step-heading">
               <div>
-                <h2>Connect bootloader</h2>
-                <p>Artery factory DFU / VID 2E3C / PID DF11</p>
+                <h2>Connect your Sleepus</h2>
+                <p>Select your device when the browser prompt appears.</p>
               </div>
               <button class="button button-primary" id="connectButton" type="button">
                 <i data-lucide="usb" aria-hidden="true"></i>
                 <span>Connect Sleepus MK3</span>
               </button>
-            </div>
-            <div class="chooser-note">
-              <i data-lucide="mouse-pointer-click" aria-hidden="true"></i>
-              <span>First connection: select <strong>DFU in FS Mode - Paired</strong> in Chrome's window, then click Connect.</span>
             </div>
             <dl class="device-details" id="deviceDetails" hidden>
               <div><dt>Device</dt><dd id="deviceName">-</dd></div>
@@ -86,8 +63,8 @@
           <div class="step-body">
             <div class="step-heading">
               <div>
-                <h2>Select firmware</h2>
-                <p>Raw binary image linked for address 0x08000000</p>
+                <h2>Choose firmware</h2>
+                <p>The latest version is ready to install.</p>
               </div>
               <div class="firmware-actions">
                 <button class="button button-primary" id="latestFirmwareButton" type="button" hidden>
@@ -117,8 +94,8 @@
           <div class="step-body">
             <div class="step-heading flash-heading">
               <div>
-                <h2>Erase and flash</h2>
-                <p>Mass erase removes RDP Level 1 before writing</p>
+                <h2>Install update</h2>
+                <p>Keep this page open until the update is complete.</p>
               </div>
               <button class="button button-accent" id="flashButton" type="button" disabled>
                 <i data-lucide="zap" aria-hidden="true"></i>
@@ -133,7 +110,7 @@
         </div>
       </div>
 
-      <aside class="console-panel" aria-labelledby="console-heading">
+      <aside class="console-panel" aria-labelledby="console-heading" hidden>
         <div class="console-header">
           <div>
             <span class="console-kicker">DFU SESSION</span>
@@ -148,7 +125,7 @@
     </section>
 
     <footer>
-      <span>WebUSB requires Chrome or Edge over HTTPS.</span>
+      <span>Use Chrome or Edge to update.</span>
       <span>Do not disconnect power while writing.</span>
     </footer>
   </main>

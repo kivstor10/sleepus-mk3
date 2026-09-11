@@ -115,7 +115,7 @@ p { margin-bottom: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
 }
 .driver-steps li { padding-left: 4px; }
 
-.workspace { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(330px, 0.65fr); border: 1px solid var(--line); background: var(--surface); }
+.workspace { display: grid; grid-template-columns: 1fr; border: 1px solid var(--line); background: var(--surface); }
 .steps { min-width: 0; }
 .step { display: grid; grid-template-columns: 66px 1fr; min-height: 145px; border-bottom: 1px solid var(--line); }
 .step:last-child { border-bottom: 0; }
@@ -168,7 +168,7 @@ p { margin-bottom: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .icon-button { display: grid; width: 34px; height: 34px; place-items: center; border-radius: 4px; color: var(--muted); background: transparent; }
 .icon-button svg { width: 17px; height: 17px; }
 
-.device-details { display: grid; grid-template-columns: 1fr 1.4fr 0.8fr; gap: 14px; margin: 22px 0 0; padding-top: 18px; border-top: 1px solid var(--line); }
+.device-details { display: none !important; }
 .device-details div { min-width: 0; }
 dt { margin-bottom: 4px; color: var(--muted); font-size: 10px; text-transform: uppercase; }
 dd { overflow: hidden; margin: 0; font: 500 12px/1.4 "DM Mono", monospace; text-overflow: ellipsis; }
