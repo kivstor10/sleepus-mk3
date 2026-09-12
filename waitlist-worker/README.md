@@ -17,3 +17,11 @@ Export signups with:
 ```powershell
 npx wrangler d1 execute sleepus-waitlist --remote --command "SELECT email, created_at FROM waitlist_signups ORDER BY created_at DESC"
 ```
+
+## View signups
+
+Run `./view-signups.ps1` to print the current signups. To create a CSV file:
+
+```powershell
+./view-signups.ps1 -ExportPath ./waitlist-signups.csv
+```
