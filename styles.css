@@ -47,6 +47,10 @@ button, label { -webkit-tap-highlight-color: transparent; }
   border-bottom: 1px solid var(--line);
 }
 
+.breadcrumbs { display: flex; gap: 7px; margin-bottom: 14px; color: var(--muted); font: 500 11px/1 "DM Mono", monospace; }
+.breadcrumbs a { color: var(--green); text-decoration: none; }
+.breadcrumbs a:hover { text-decoration: underline; }
+
 .eyebrow, .console-kicker {
   margin: 0 0 8px;
   font: 500 11px/1.2 "DM Mono", monospace;
