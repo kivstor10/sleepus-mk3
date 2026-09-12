@@ -1,7 +1,7 @@
 (() => {
   "use strict";
 
-  const WAITLIST_ENDPOINT = "/api/waitlist";
+  const WAITLIST_ENDPOINT = "https://sleepus-waitlist.jameslangton123.workers.dev/api/waitlist";
   const form = document.querySelector("#waitlistForm");
   const email = document.querySelector("#email");
   const submitButton = document.querySelector("#submitButton");

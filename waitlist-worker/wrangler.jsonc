@@ -2,7 +2,13 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "sleepus-waitlist",
 	"main": "src/index.js",
-	"compatibility_date": "2025-09-12",
+	"compatibility_date": "2026-09-12",
+	"observability": {
+		"enabled": true,
+		"traces": {
+			"enabled": true
+		}
+	},
 	"d1_databases": [
 		{
 			"binding": "DB",
