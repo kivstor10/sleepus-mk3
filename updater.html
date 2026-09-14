@@ -40,6 +40,25 @@
       <img src="assets/sleepus-mk3-boot0.svg" alt="Sleepus MK3 diagram showing the BOOT0 button on the upper-right side.">
     </section>
 
+    <section class="driver-support" aria-labelledby="driver-heading">
+      <div class="driver-copy">
+        <i data-lucide="shield-check" aria-hidden="true"></i>
+        <div>
+          <h2 id="driver-heading">Windows driver setup</h2>
+          <p>If Connect does not find Sleepus, use Zadig to install WinUSB for <strong>DFU in FS Mode</strong> (2E3C:DF11).</p>
+        </div>
+      </div>
+      <a class="button button-secondary" href="https://github.com/pbatard/libwdi/releases/download/v1.5.1/zadig-2.9.exe" target="_blank" rel="noopener noreferrer">
+        <i data-lucide="download" aria-hidden="true"></i>
+        <span>Download Zadig 2.9</span>
+      </a>
+      <ol class="driver-steps">
+        <li>Connect Sleepus while holding <strong>BOOT0</strong>, then open Zadig and choose <strong>Options &gt; List All Devices</strong>.</li>
+        <li>Select <strong>DFU in FS Mode</strong> only after confirming USB ID <strong>2E3C:DF11</strong>.</li>
+        <li>Choose <strong>WinUSB</strong>, click <strong>Install Driver</strong> or <strong>Replace Driver</strong>, then return here and click Connect.</li>
+      </ol>
+    </section>
+
     <section class="workspace" aria-label="Firmware update controls">
       <div class="steps">
         <div class="step">
