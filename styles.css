@@ -76,7 +76,8 @@ p { margin-bottom: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .state-dot.busy { background: var(--signal); box-shadow: 0 0 0 4px rgba(185, 243, 90, 0.15); }
 
 .instruction {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(140px, 220px);
   align-items: center;
   gap: 16px;
   margin: 26px 0;
@@ -89,6 +90,7 @@ p { margin-bottom: 0; color: var(--muted); font-size: 13px; line-height: 1.55; }
 .instruction svg { flex: 0 0 auto; width: 25px; height: 25px; color: var(--signal); }
 .instruction h2 { margin-bottom: 2px; }
 .instruction p { color: #c6d4ca; font-size: 14px; }
+.instruction img { display: block; width: 100%; max-height: 112px; object-fit: contain; object-position: right center; }
 
 .driver-support {
   display: grid;
@@ -210,7 +212,8 @@ footer { display: flex; justify-content: space-between; gap: 20px; padding-top: 
 @media (max-width: 560px) {
   .masthead { align-items: flex-start; flex-direction: column; }
   .connection-state { padding: 0; }
-  .instruction { align-items: flex-start; }
+  .instruction { grid-template-columns: auto minmax(0, 1fr); align-items: flex-start; }
+  .instruction img { grid-column: 1 / -1; width: min(100%, 190px); justify-self: end; max-height: none; }
   .driver-support { grid-template-columns: 1fr; }
   .driver-steps { grid-template-columns: 1fr; }
   .step { grid-template-columns: 42px 1fr; }
