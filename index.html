@@ -19,7 +19,13 @@
       <a class="flasher-link" href="updater.html">Firmware Flasher <span aria-hidden="true">&#8599;</span></a>
     </nav>
 
-    <section class="hero" aria-labelledby="hero-title">
+    <nav class="section-nav" aria-label="Page sections">
+      <a href="#overview">Overview</a>
+      <a href="#controls">Controls</a>
+      <a href="#setup">Setup</a>
+    </nav>
+
+    <section class="hero" id="overview" aria-labelledby="hero-title">
       <div class="hero-copy">
         <p class="eyebrow">BATCH 1 / 100 UNITS</p>
         <h1 id="hero-title">Sleepus MK3</h1>
@@ -54,13 +60,43 @@
       </div>
     </section>
 
-    <section class="control-layout" aria-labelledby="control-layout-title">
+    <section class="control-layout" id="controls" aria-labelledby="control-layout-title">
       <div class="section-heading">
         <p class="eyebrow">ON-DEVICE CONTROLS</p>
         <h2 id="control-layout-title">Control layout</h2>
         <p>Use the four chassis buttons to navigate menus and tune active profiles directly on Sleepus MK3.</p>
       </div>
       <img src="assets/sleepus-mk3-controls.svg" alt="Sleepus MK3 control layout showing Menu Up and Menu Down, Select, and Back buttons.">
+    </section>
+
+    <section class="setup-guide" id="setup" aria-labelledby="setup-guide-title">
+      <div class="section-heading setup-heading">
+        <p class="eyebrow">GETTING STARTED</p>
+        <h2 id="setup-guide-title">Setup guide</h2>
+        <p>Connect Sleepus MK3 between your controller and console before selecting a profile.</p>
+      </div>
+      <ol class="setup-steps">
+        <li class="setup-step">
+          <div class="setup-graphic" aria-hidden="true"><span>01</span></div>
+          <div><p class="setup-number">STEP 01</p><h3>Remove controller batteries</h3><p>Remove the batteries from your controller to force wired communication.</p></div>
+        </li>
+        <li class="setup-step">
+          <div class="setup-graphic" aria-hidden="true"><span>02</span></div>
+          <div><p class="setup-number">STEP 02</p><h3>Connect both USB-C cables</h3><p>Plug the two supplied USB-C cables into the Sleepus ports.</p></div>
+        </li>
+        <li class="setup-step">
+          <div class="setup-graphic" aria-hidden="true"><span>03</span></div>
+          <div><p class="setup-number">STEP 03</p><h3>Connect your controller</h3><p>Plug your controller into the cable from the front USB-A port on Sleepus.</p></div>
+        </li>
+        <li class="setup-step">
+          <div class="setup-graphic" aria-hidden="true"><span>04</span></div>
+          <div><p class="setup-number">STEP 04</p><h3>Connect your console</h3><p>Plug the rear USB-C cable into your Xbox console.</p></div>
+        </li>
+        <li class="setup-step">
+          <div class="setup-graphic" aria-hidden="true"><span>05</span></div>
+          <div><p class="setup-number">STEP 05</p><h3>Play</h3><p>Enjoy using Sleepus MK3.</p></div>
+        </li>
+      </ol>
     </section>
   </main>
 </body>
