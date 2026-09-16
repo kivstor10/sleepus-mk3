@@ -22,6 +22,7 @@ body {
 }
 
 main { width: min(1180px, calc(100% - 48px)); margin: 0 auto; }
+.site-header { position: sticky; top: 0; z-index: 10; background: var(--ground); box-shadow: 0 12px 20px rgba(7, 16, 11, 0.85); }
 .nav { display: flex; align-items: center; justify-content: space-between; min-height: 96px; border-bottom: 1px solid var(--line); }
 .brand, .flasher-link { color: var(--ink); text-decoration: none; }
 .brand { font: 800 20px/1 "DM Mono", monospace; letter-spacing: 0; }
