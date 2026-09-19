@@ -185,6 +185,27 @@ dd { overflow: hidden; margin: 0; font: 500 12px/1.4 "DM Mono", monospace; text-
 .file-row strong { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 .file-row span { color: var(--muted); font: 400 11px/1.5 "DM Mono", monospace; }
 
+.pack-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+.pack-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px 16px;
+  min-height: 132px;
+  padding: 15px;
+  border: 1px solid var(--line);
+  background: #0e1511;
+}
+.pack-card h3 { margin: 0; color: var(--ink); font: 700 15px/1.2 "Manrope", sans-serif; }
+.pack-card p { grid-column: 1 / -1; font-size: 12px; }
+.pack-meta { color: var(--green); font: 500 10px/1 "DM Mono", monospace; }
+.pack-card .button { min-height: 34px; padding: 0 11px; font-size: 11px; }
+
 .progress-region { margin-top: 24px; }
 .progress-labels { display: flex; justify-content: space-between; margin-bottom: 9px; font: 500 11px/1 "DM Mono", monospace; }
 progress { display: block; width: 100%; height: 10px; overflow: hidden; border: 0; border-radius: 0; background: #263229; }
@@ -221,6 +242,7 @@ footer { display: flex; justify-content: space-between; gap: 20px; padding-top: 
   .step-body { padding: 24px 18px; }
   .step-heading { align-items: stretch; flex-direction: column; }
   .firmware-actions { flex-direction: column; }
+  .pack-grid { grid-template-columns: 1fr; }
   .button { width: 100%; }
   .device-details { grid-template-columns: 1fr; }
   footer { flex-direction: column; }

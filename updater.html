@@ -87,8 +87,8 @@
           <div class="step-body">
             <div class="step-heading">
               <div>
-                <h2>Choose firmware</h2>
-                <p>The latest version is ready to install.</p>
+                <h2>Update core firmware</h2>
+                <p>Install the latest Sleepus operating system.</p>
               </div>
               <div class="firmware-actions">
                 <button class="button button-primary" id="latestFirmwareButton" type="button" hidden>
@@ -116,14 +116,30 @@
         <div class="step">
           <div class="step-index">03</div>
           <div class="step-body">
+            <div class="step-heading">
+              <div>
+                <h2>Choose a game pack</h2>
+                <p>Game packs update the script partition without replacing core firmware or saved settings.</p>
+              </div>
+            </div>
+            <div class="pack-grid" id="packGrid" aria-live="polite">
+              <p class="release-status">Loading game packs...</p>
+            </div>
+            <p class="release-status" id="selectedPackStatus">No game pack selected.</p>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-index">04</div>
+          <div class="step-body">
             <div class="step-heading flash-heading">
               <div>
-                <h2>Install update</h2>
-                <p>Keep this page open until the update is complete.</p>
+                <h2>Install selection</h2>
+                <p>Core updates preserve the game-pack slot and saved settings. Game packs write only the script slot.</p>
               </div>
               <button class="button button-accent" id="flashButton" type="button" disabled>
                 <i data-lucide="zap" aria-hidden="true"></i>
-                <span>Flash Firmware</span>
+                <span>Install selected item</span>
               </button>
             </div>
             <div class="progress-region" aria-live="polite">

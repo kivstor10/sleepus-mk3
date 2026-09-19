@@ -1,7 +1,7 @@
 {
   "version": "v1.1.2",
-  "file": "Sleepus-MK3.bin",
-  "size": 817912,
-  "sha256": "c03e24c7b05137c125e8901f68dc1e65b173f9e74ce7350770aa588c18c07ed7",
+  "file": "Sleepus-MK3-Core.bin",
+  "size": 193184,
+  "sha256": "1308faa63f1063a080e82c4c8acb41203ca26ab7a1b947ebc2775bc695cc88af",
   "publishedAt": "2026-09-14T21:50:02Z"
 }

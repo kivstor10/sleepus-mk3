@@ -3,13 +3,20 @@
 
   const USB_FILTER = { vendorId: 0x2e3c, productId: 0xdf11 };
   const FLASH_BASE = 0x08000000;
+  const LUA_ARCHIVE_ADDRESS = 0x080c0000;
+  const LUA_ARCHIVE_END = 0x080fe000;
+  const LUA_ARCHIVE_CAPACITY = LUA_ARCHIVE_END - LUA_ARCHIVE_ADDRESS;
+  const LUA_ARCHIVE_HEADER_SIZE = 32;
+  const FLASH_SECTOR_SIZE = 2048;
   const DEFAULT_TRANSFER_SIZE = 2048;
   const MASS_ERASE_COMMAND = 0x41;
   const RECONNECT_TIMEOUT_MS = 20000;
   const FIRMWARE_MANIFEST_URL = "firmware/manifest.json";
+  const GAMEPACKS_MANIFEST_URL = "gamepacks.json";
 
   let device = null;
   let selectedFile = null;
+  let selectedPack = null;
   let latestFirmware = null;
   let transferSize = DEFAULT_TRANSFER_SIZE;
   let operationInProgress = false;
@@ -35,6 +42,8 @@
   const progressBar = document.querySelector("#progressBar");
   const progressStage = document.querySelector("#progressStage");
   const progressValue = document.querySelector("#progressValue");
+  const packGrid = document.querySelector("#packGrid");
+  const selectedPackStatus = document.querySelector("#selectedPackStatus");
 
   function formatError(error) {
     if (typeof error === "string") return error;
@@ -76,7 +85,7 @@
     firmwareFile.disabled = operationInProgress;
     latestFirmwareButton.disabled = operationInProgress;
     clearFileButton.disabled = operationInProgress;
-    flashButton.disabled = !connected || !selectedFile || operationInProgress;
+    flashButton.disabled = !connected || (!selectedFile && !selectedPack) || operationInProgress;
   }
 
   async function sha256Hex(data) {
@@ -84,7 +93,112 @@
     return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
   }
 
+  function crc32(bytes, clearArchiveCrc = false) {
+    let crc = 0xffffffff;
+    for (let index = 0; index < bytes.length; index++) {
+      let value = bytes[index];
+      if (clearArchiveCrc && index >= 20 && index < 24) value = 0;
+      crc ^= value;
+      for (let bit = 0; bit < 8; bit++) {
+        crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+      }
+    }
+    return (crc ^ 0xffffffff) >>> 0;
+  }
+
+  function validateSluaArchive(bytes) {
+    if (!(bytes instanceof Uint8Array) || bytes.byteLength < LUA_ARCHIVE_HEADER_SIZE) {
+      throw new Error("Game pack is too small to contain an SLUA archive.");
+    }
+    if (bytes.byteLength > LUA_ARCHIVE_CAPACITY ||
+        String.fromCharCode(...bytes.slice(0, 4)) !== "SLUA") {
+      throw new Error("Game pack is not a valid SLUA archive.");
+    }
+
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const version = view.getUint16(4, true);
+    const headerSize = view.getUint16(6, true);
+    const totalLength = view.getUint32(8, true);
+    const sourceLength = view.getUint32(12, true);
+    if (version !== 1 || headerSize !== LUA_ARCHIVE_HEADER_SIZE ||
+        totalLength !== bytes.byteLength || sourceLength === 0 ||
+        totalLength !== headerSize + sourceLength ||
+        view.getUint32(24, true) !== 0 || view.getUint32(28, true) !== 0 ||
+        crc32(bytes.slice(headerSize)) !== view.getUint32(16, true) ||
+        crc32(bytes, true) !== view.getUint32(20, true)) {
+      throw new Error("Game pack failed SLUA validation.");
+    }
+  }
+
+  function buildSluaArchive(source) {
+    if (!(source instanceof Uint8Array) || source.byteLength === 0 ||
+        source.byteLength > LUA_ARCHIVE_CAPACITY - LUA_ARCHIVE_HEADER_SIZE ||
+        source.includes(0)) {
+      throw new Error("Game-pack source is not a valid Lua script.");
+    }
+    const archive = new Uint8Array(LUA_ARCHIVE_HEADER_SIZE + source.byteLength);
+    archive.set(new TextEncoder().encode("SLUA"), 0);
+    const view = new DataView(archive.buffer);
+    view.setUint16(4, 1, true);
+    view.setUint16(6, LUA_ARCHIVE_HEADER_SIZE, true);
+    view.setUint32(8, archive.byteLength, true);
+    view.setUint32(12, source.byteLength, true);
+    view.setUint32(16, crc32(source), true);
+    archive.set(source, LUA_ARCHIVE_HEADER_SIZE);
+    view.setUint32(20, crc32(archive, true), true);
+    return archive;
+  }
+
+  function createPackCard(pack) {
+    const card = document.createElement("article");
+    card.className = "pack-card";
+    const heading = document.createElement("h3");
+    heading.textContent = pack.title;
+    const description = document.createElement("p");
+    description.textContent = pack.description;
+    const metadata = document.createElement("span");
+    metadata.className = "pack-meta";
+    metadata.textContent = pack.status === "available" ? `VERSION ${pack.version}` : "COMING SOON";
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "button button-secondary";
+    button.textContent = pack.status === "available" ? "Select pack" : "Unavailable";
+    button.disabled = pack.status !== "available";
+    button.addEventListener("click", () => selectGamePack(pack));
+    card.append(heading, description, metadata, button);
+    return card;
+  }
+
+  async function loadGamePacks() {
+    try {
+      const response = await fetch(GAMEPACKS_MANIFEST_URL, { cache: "no-store" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const manifest = await response.json();
+      if (manifest.format !== 1 || manifest.scriptAddress !== "0x080C0000" ||
+          manifest.scriptCapacity !== LUA_ARCHIVE_CAPACITY || !Array.isArray(manifest.packs)) {
+        throw new Error("Invalid game-pack catalog.");
+      }
+      packGrid.replaceChildren(...manifest.packs.map(createPackCard));
+    } catch (error) {
+      packGrid.textContent = "Game packs are unavailable.";
+      log(`Game-pack catalog unavailable: ${formatError(error)}`, "WARN");
+    }
+  }
+
+  function selectGamePack(pack) {
+    selectedFile = null;
+    firmwareFile.value = "";
+    fileRow.hidden = true;
+    selectedPack = pack;
+    selectedPackStatus.textContent = `Selected: ${pack.title} ${pack.version}. Installs at 0x080C0000.`;
+    flashButton.querySelector("span").textContent = `Install ${pack.title} pack`;
+    updateControls();
+  }
+
   function selectFirmware(file, detail) {
+    selectedPack = null;
+    selectedPackStatus.textContent = "No game pack selected.";
+    flashButton.querySelector("span").textContent = "Install core firmware";
     selectedFile = file;
     fileName.textContent = file.name;
     fileSize.textContent = detail || `${file.size.toLocaleString()} bytes`;
@@ -273,9 +387,36 @@
     }
   }
 
-  async function writeFirmware(activeDevice, image) {
+  async function eraseRange(activeDevice, startAddress, imageLength, label) {
+    if (startAddress < FLASH_BASE || imageLength === 0 ||
+        startAddress + imageLength > LUA_ARCHIVE_END) {
+      throw new Error("Requested erase range is outside writable firmware and script flash.");
+    }
+    const firstAddress = startAddress - (startAddress % FLASH_SECTOR_SIZE);
+    const lastAddress = startAddress + imageLength;
+    const sectorCount = Math.ceil((lastAddress - firstAddress) / FLASH_SECTOR_SIZE);
+    await ensureIdle(activeDevice);
+    log(`Erasing ${sectorCount} ${label} sector(s) at 0x${firstAddress.toString(16).toUpperCase()}.`);
+    for (let sector = 0; sector < sectorCount; sector++) {
+      const address = firstAddress + sector * FLASH_SECTOR_SIZE;
+      const command = new Uint8Array(5);
+      command[0] = MASS_ERASE_COMMAND;
+      new DataView(command.buffer).setUint32(1, address, true);
+      await activeDevice.download(command.buffer, 0);
+      const status = await activeDevice.poll_until(state =>
+        state !== dfu.dfuDNBUSY && state !== dfu.dfuDNLOAD_SYNC
+      );
+      if (status.status !== dfu.STATUS_OK) {
+        throw new Error(`Sector erase failed at 0x${address.toString(16).toUpperCase()}.`);
+      }
+      setProgress(`Erasing ${label}`, 5 + ((sector + 1) / sectorCount) * 20);
+    }
+    await ensureIdle(activeDevice);
+  }
+
+  async function writeRange(activeDevice, startAddress, image, label) {
     let bytesSent = 0;
-    let address = FLASH_BASE;
+    let address = startAddress;
 
     while (bytesSent < image.byteLength) {
       const chunkSize = Math.min(transferSize, image.byteLength - bytesSent);
@@ -283,19 +424,19 @@
       const bytesWritten = await activeDevice.download(image.slice(bytesSent, bytesSent + chunkSize), 2);
       const status = await activeDevice.poll_until_idle(dfu.dfuDNLOAD_IDLE);
       if (status.status !== dfu.STATUS_OK) {
-        throw new Error(`Firmware write failed at 0x${address.toString(16)} with DFU status ${status.status}.`);
+        throw new Error(`${label} write failed at 0x${address.toString(16)} with DFU status ${status.status}.`);
       }
       if (bytesWritten !== chunkSize) {
-        throw new Error(`Short firmware write at 0x${address.toString(16)}: ${bytesWritten} of ${chunkSize} bytes.`);
+        throw new Error(`Short ${label} write at 0x${address.toString(16)}: ${bytesWritten} of ${chunkSize} bytes.`);
       }
 
       bytesSent += bytesWritten;
       address += bytesWritten;
-      setProgress("Writing firmware", 25 + (bytesSent / image.byteLength) * 70);
+      setProgress(`Writing ${label}`, 25 + (bytesSent / image.byteLength) * 70);
     }
 
-    log(`Wrote ${bytesSent.toLocaleString()} bytes. Manifesting firmware.`);
-    await activeDevice.dfuseCommand(dfuse.SET_ADDRESS, FLASH_BASE, 4);
+    log(`Wrote ${bytesSent.toLocaleString()} bytes. Manifesting ${label}.`);
+    await activeDevice.dfuseCommand(dfuse.SET_ADDRESS, startAddress, 4);
     await activeDevice.download(new ArrayBuffer(), 0);
     try {
       const status = await activeDevice.poll_until(state =>
@@ -308,6 +449,27 @@
       if (!isDisconnectError(error)) throw error;
       log("Device reset after firmware manifestation.");
     }
+  }
+
+  async function writeFirmware(activeDevice, image) {
+    await writeRange(activeDevice, FLASH_BASE, image, "core firmware");
+  }
+
+  async function installGamePack(activeDevice, pack) {
+    if (pack.status !== "available" || !pack.sourceUrl || !pack.sourceSha256) {
+      throw new Error("That game pack is not ready to install.");
+    }
+    const response = await fetch(pack.sourceUrl, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Could not download ${pack.title} game pack.`);
+    const source = new Uint8Array(await response.arrayBuffer());
+    if (await sha256Hex(source) !== pack.sourceSha256.toLowerCase()) {
+      throw new Error(`${pack.title} game-pack source failed SHA-256 verification.`);
+    }
+    const archive = buildSluaArchive(source);
+    validateSluaArchive(archive);
+    log(`Built and validated ${pack.title} game pack (${archive.byteLength.toLocaleString()} bytes).`);
+    await eraseRange(activeDevice, LUA_ARCHIVE_ADDRESS, archive.byteLength, "game pack");
+    await writeRange(activeDevice, LUA_ARCHIVE_ADDRESS, archive.buffer, "game pack");
   }
 
   async function waitForReconnect(previousUsbDevice) {
@@ -338,26 +500,25 @@
   }
 
   async function flashFirmware() {
-    if (!device || !selectedFile) return;
+    if (!device || (!selectedFile && !selectedPack)) return;
     operationInProgress = true;
     updateControls();
     setConnectionState("Updating firmware", "busy");
     setProgress("Reading firmware", 2);
 
     try {
-      const image = await selectedFile.arrayBuffer();
-      if (!image.byteLength) throw new Error("The selected firmware file is empty.");
-      log(`Starting update with ${selectedFile.name} (${image.byteLength.toLocaleString()} bytes).`);
-
-      const beforeErase = device.device_;
-      const disconnected = await massErase(device);
-      if (disconnected) await waitForReconnect(beforeErase);
-
-      await ensureIdle(device);
-      device.startAddress = FLASH_BASE;
-      log("Writing firmware at 0x08000000.");
-      setProgress("Writing firmware", 25);
-      await writeFirmware(device, image);
+      if (selectedPack) {
+        await installGamePack(device, selectedPack);
+      } else {
+        const image = await selectedFile.arrayBuffer();
+        if (!image.byteLength) throw new Error("The selected firmware file is empty.");
+        log(`Starting core update with ${selectedFile.name} (${image.byteLength.toLocaleString()} bytes).`);
+        await ensureIdle(device);
+        device.startAddress = FLASH_BASE;
+        await eraseRange(device, FLASH_BASE, image.byteLength, "core firmware");
+        setProgress("Writing core firmware", 25);
+        await writeFirmware(device, image);
+      }
       setProgress("Update complete", 100);
       log("Firmware update complete. The device may now restart.");
       setConnectionState("Update complete", "connected");
@@ -430,4 +591,5 @@
   log("Updater ready. Enter BOOT0 mode, then connect the device.");
   updateControls();
   discoverLatestFirmware();
+  loadGamePacks();
 })();
