@@ -488,16 +488,22 @@
   }
 
   async function installGamePack(activeDevice, pack) {
-    if (pack.status !== "available" || !pack.sourceUrl || !pack.sourceSha256) {
+    if (pack.status !== "available") {
       throw new Error("That game pack is not ready to install.");
     }
-    const response = await fetch(pack.sourceUrl, { cache: "no-store" });
-    if (!response.ok) throw new Error(`Could not download ${pack.title} game pack.`);
-    const source = new Uint8Array(await response.arrayBuffer());
-    if (await sha256Hex(source) !== pack.sourceSha256.toLowerCase()) {
-      throw new Error(`${pack.title} game-pack source failed SHA-256 verification.`);
+    const useArchive = pack.archiveUrl && pack.archiveSha256;
+    if (!useArchive && (!pack.sourceUrl || !pack.sourceSha256)) {
+      throw new Error("That game pack has no verified download.");
     }
-    const archive = buildSluaArchive(source);
+    const response = await fetch(useArchive ? pack.archiveUrl : pack.sourceUrl,
+      { cache: "no-store" });
+    if (!response.ok) throw new Error(`Could not download ${pack.title} game pack.`);
+    const download = new Uint8Array(await response.arrayBuffer());
+    const expectedHash = useArchive ? pack.archiveSha256 : pack.sourceSha256;
+    if (await sha256Hex(download) !== expectedHash.toLowerCase()) {
+      throw new Error(`${pack.title} game-pack download failed SHA-256 verification.`);
+    }
+    const archive = useArchive ? download : buildSluaArchive(download);
     validateSluaArchive(archive);
     log(`Built and validated ${pack.title} game pack (${archive.byteLength.toLocaleString()} bytes).`);
     await eraseRange(activeDevice, LUA_ARCHIVE_ADDRESS, archive.byteLength, "game pack");
