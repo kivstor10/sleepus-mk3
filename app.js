@@ -16,7 +16,8 @@
 
   let device = null;
   let selectedFile = null;
-  let selectedPack = null;
+  const selectedGamePackIds = new Set();
+  let gamePacks = [];
   let latestFirmware = null;
   let transferSize = DEFAULT_TRANSFER_SIZE;
   let operationInProgress = false;
@@ -25,7 +26,6 @@
   const connectButton = document.querySelector("#connectButton");
   const flashButton = document.querySelector("#flashButton");
   const firmwareFile = document.querySelector("#firmwareFile");
-  const firmwareVariant = document.querySelector("#firmwareVariant");
   const latestFirmwareButton = document.querySelector("#latestFirmwareButton");
   const latestFirmwareStatus = document.querySelector("#latestFirmwareStatus");
   const clearFileButton = document.querySelector("#clearFileButton");
@@ -84,10 +84,9 @@
     connectButton.disabled = operationInProgress;
     connectButton.querySelector("span").textContent = connected ? "Disconnect" : "Connect Sleepus MK3";
     firmwareFile.disabled = operationInProgress;
-    firmwareVariant.disabled = operationInProgress || !latestFirmware;
     latestFirmwareButton.disabled = operationInProgress;
     clearFileButton.disabled = operationInProgress;
-    flashButton.disabled = !connected || (!selectedFile && !selectedPack) || operationInProgress;
+    flashButton.disabled = !connected || !selectedFile || operationInProgress;
   }
 
   async function sha256Hex(data) {
@@ -154,6 +153,8 @@
   function createPackCard(pack) {
     const card = document.createElement("article");
     card.className = "pack-card";
+    const selected = selectedGamePackIds.has(pack.id);
+    card.classList.toggle("selected", selected);
     const heading = document.createElement("h3");
     heading.textContent = pack.title;
     const description = document.createElement("p");
@@ -164,9 +165,10 @@
     const button = document.createElement("button");
     button.type = "button";
     button.className = "button button-secondary";
-    button.textContent = pack.status === "available" ? "Select pack" : "Unavailable";
+    button.textContent = pack.status === "available" ? (selected ? "Selected" : "Add game") : "Unavailable";
     button.disabled = pack.status !== "available";
-    button.addEventListener("click", () => selectGamePack(pack));
+    button.setAttribute("aria-pressed", String(selected));
+    button.addEventListener("click", () => toggleGamePack(pack));
     card.append(heading, description, metadata, button);
     return card;
   }
@@ -180,26 +182,47 @@
           manifest.scriptCapacity !== LUA_ARCHIVE_CAPACITY || !Array.isArray(manifest.packs)) {
         throw new Error("Invalid game-pack catalog.");
       }
-      packGrid.replaceChildren(...manifest.packs.map(createPackCard));
+      gamePacks = manifest.packs;
+      renderGamePacks();
     } catch (error) {
       packGrid.textContent = "Game packs are unavailable.";
       log(`Game-pack catalog unavailable: ${formatError(error)}`, "WARN");
     }
   }
 
-  function selectGamePack(pack) {
+  function renderGamePacks() {
+    packGrid.replaceChildren(...gamePacks.map(createPackCard));
+  }
+
+  function selectedFirmwareKey() {
+    const hasR6 = selectedGamePackIds.has("r6");
+    const hasBf6 = selectedGamePackIds.has("bf6");
+    if (hasR6 && hasBf6) return "both";
+    if (hasR6) return "r6";
+    if (hasBf6) return "bf6";
+    return "bare";
+  }
+
+  function toggleGamePack(pack) {
+    if (selectedGamePackIds.has(pack.id)) {
+      selectedGamePackIds.delete(pack.id);
+    } else {
+      selectedGamePackIds.add(pack.id);
+    }
     selectedFile = null;
     firmwareFile.value = "";
     fileRow.hidden = true;
-    selectedPack = pack;
-    selectedPackStatus.textContent = `Selected: ${pack.title} ${pack.version}. Installs at 0x080C0000.`;
-    flashButton.querySelector("span").textContent = `Install ${pack.title} pack`;
+    const selectedGames = gamePacks.filter(candidate => selectedGamePackIds.has(candidate.id));
+    selectedPackStatus.textContent = selectedGames.length
+      ? `Selected games: ${selectedGames.map(candidate => candidate.title).join(", ")}.`
+      : "No game profiles selected. The latest release uses base firmware.";
+    flashButton.querySelector("span").textContent = "Install core firmware";
+    renderGamePacks();
+    updateVariantStatus();
     updateControls();
   }
 
   function selectFirmware(file, detail) {
-    selectedPack = null;
-    selectedPackStatus.textContent = "No game pack selected.";
     flashButton.querySelector("span").textContent = "Install core firmware";
     selectedFile = file;
     fileName.textContent = file.name;
@@ -216,13 +239,17 @@
   }
 
   function selectedVariant() {
-    return firmwareVariants(latestFirmware).find(variant => variant.key === firmwareVariant.value);
+    return firmwareVariants(latestFirmware).find(variant => variant.key === selectedFirmwareKey());
   }
 
   function updateVariantStatus() {
     const variant = selectedVariant();
     if (!latestFirmware || !variant) return;
-    latestFirmwareStatus.textContent = `${variant.label || variant.key}: ${latestFirmware.version}`;
+    const selectedGames = gamePacks.filter(pack => selectedGamePackIds.has(pack.id));
+    const selection = selectedGames.length
+      ? `Selected games: ${selectedGames.map(pack => pack.title).join(", ")}`
+      : "No game profiles selected";
+    latestFirmwareStatus.textContent = `${selection}. Latest release: ${variant.label || variant.key} ${latestFirmware.version}.`;
   }
 
   async function discoverLatestFirmware() {
@@ -237,14 +264,6 @@
         throw new Error("Invalid firmware variant manifest");
       }
       latestFirmware = manifest;
-      firmwareVariant.replaceChildren();
-      for (const variant of variants) {
-        const option = document.createElement("option");
-        option.value = variant.key;
-        option.textContent = variant.label || variant.key;
-        firmwareVariant.append(option);
-      }
-      firmwareVariant.value = manifest.defaultVariant || variants[0].key;
       updateVariantStatus();
       latestFirmwareButton.hidden = false;
       updateControls();
@@ -538,25 +557,21 @@
   }
 
   async function flashFirmware() {
-    if (!device || (!selectedFile && !selectedPack)) return;
+    if (!device || !selectedFile) return;
     operationInProgress = true;
     updateControls();
     setConnectionState("Updating firmware", "busy");
     setProgress("Reading firmware", 2);
 
     try {
-      if (selectedPack) {
-        await installGamePack(device, selectedPack);
-      } else {
-        const image = await selectedFile.arrayBuffer();
-        if (!image.byteLength) throw new Error("The selected firmware file is empty.");
-        log(`Starting core update with ${selectedFile.name} (${image.byteLength.toLocaleString()} bytes).`);
-        await ensureIdle(device);
-        device.startAddress = FLASH_BASE;
-        await eraseRange(device, FLASH_BASE, image.byteLength, "core firmware");
-        setProgress("Writing core firmware", 25);
-        await writeFirmware(device, image);
-      }
+      const image = await selectedFile.arrayBuffer();
+      if (!image.byteLength) throw new Error("The selected firmware file is empty.");
+      log(`Starting core update with ${selectedFile.name} (${image.byteLength.toLocaleString()} bytes).`);
+      await ensureIdle(device);
+      device.startAddress = FLASH_BASE;
+      await eraseRange(device, FLASH_BASE, image.byteLength, "core firmware");
+      setProgress("Writing core firmware", 25);
+      await writeFirmware(device, image);
       setProgress("Update complete", 100);
       log("Firmware update complete. The device may now restart.");
       setConnectionState("Update complete", "connected");
@@ -606,7 +621,6 @@
 
   flashButton.addEventListener("click", flashFirmware);
   latestFirmwareButton.addEventListener("click", selectLatestFirmware);
-  firmwareVariant.addEventListener("change", updateVariantStatus);
   clearConsoleButton.addEventListener("click", () => { statusConsole.value = ""; });
 
   if (navigator.usb) {

@@ -4,40 +4,18 @@
   "scriptCapacity": 253952,
   "packs": [
     {
-      "id": "both",
-      "title": "R6 + BF6",
-      "description": "Combined Rainbow Six Siege and Battlefield 6 profiles.",
-      "version": "1.1.3",
-      "status": "available",
-      "archiveUrl": "firmware/packs/Sleepus-MK3-Both.sleepus-pack",
-      "archiveSha256": "84589953fed42683f6fda046f5b1fa0a1fdd1afce3d9ffd28ae4390c938d4f69"
-    },
-    {
       "id": "r6",
       "title": "R6",
       "description": "Rainbow Six Siege profile only.",
       "version": "1.1.3",
-      "status": "available",
-      "archiveUrl": "firmware/packs/Sleepus-MK3-R6.sleepus-pack",
-      "archiveSha256": "9c1568696764bab7bc4c8d9ba235e256fdf31a6570463b74991cf0b44278d141"
+      "status": "available"
     },
     {
       "id": "bf6",
       "title": "BF6",
       "description": "Battlefield 6 profile only.",
       "version": "1.1.3",
-      "status": "available",
-      "archiveUrl": "firmware/packs/Sleepus-MK3-BF6.sleepus-pack",
-      "archiveSha256": "51a2cb724e3b84a88b844f893d0b81949f1e8c656c3be6ff928aef56ee412abf"
-    },
-    {
-      "id": "bare",
-      "title": "Bare",
-      "description": "No game profiles. Use this to clear the script slot.",
-      "version": "1.1.3",
-      "status": "available",
-      "archiveUrl": "firmware/packs/Sleepus-MK3-Bare.sleepus-pack",
-      "archiveSha256": "86245d9ff2f1ad9db356ad5aba71a378fb757bd1777be408f64c381ab849569b"
+      "status": "available"
     },
     {
       "id": "rust",

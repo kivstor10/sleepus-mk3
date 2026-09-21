@@ -201,6 +201,10 @@ dd { overflow: hidden; margin: 0; font: 500 12px/1.4 "DM Mono", monospace; text-
   border: 1px solid var(--line);
   background: #0e1511;
 }
+.pack-card.selected {
+  border-color: var(--green);
+  background: #102018;
+}
 .pack-card h3 { margin: 0; color: var(--ink); font: 700 15px/1.2 "Manrope", sans-serif; }
 .pack-card p { grid-column: 1 / -1; font-size: 12px; }
 .pack-meta { color: var(--green); font: 500 10px/1 "DM Mono", monospace; }

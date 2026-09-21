@@ -1,15 +1,15 @@
 {
   "version": "v1.1.3",
-  "file": "Sleepus-MK3-Both.bin",
-  "size": 829030,
-  "sha256": "0b83df988d6ca7647973a5e745577f1dbb681990365e78bc9a841d3d3732f0cc",
-  "defaultVariant": "both",
+  "file": "Sleepus-MK3-Bare.bin",
+  "size": 829069,
+  "sha256": "68dfb59af188a51cbe63ef7edca864430296035d99dc8ed9bffeef1ed60fe9d2",
+  "defaultVariant": "bare",
   "variants": {
     "both": {
+      "label": "Combined R6 and BF6",
       "sha256": "0b83df988d6ca7647973a5e745577f1dbb681990365e78bc9a841d3d3732f0cc",
       "size": 829030,
-      "file": "Sleepus-MK3-Both.bin",
-      "label": "R6 + BF6"
+    "file": "Sleepus-MK3-Both.bin"
     },
     "r6": {
       "sha256": "5595ba189cdd9b51698aff6ad32d35457af1db9b80dffdb15f948b4964fbf939",
@@ -24,10 +24,10 @@
       "label": "BF6 only"
     },
     "bare": {
+      "label": "Base firmware",
       "sha256": "68dfb59af188a51cbe63ef7edca864430296035d99dc8ed9bffeef1ed60fe9d2",
       "size": 829069,
-      "file": "Sleepus-MK3-Bare.bin",
-      "label": "Bare firmware"
+      "file": "Sleepus-MK3-Bare.bin"
     }
   },
   "publishedAt": "2026-09-21T21:46:36Z"
