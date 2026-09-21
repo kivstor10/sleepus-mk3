@@ -25,6 +25,7 @@
   const connectButton = document.querySelector("#connectButton");
   const flashButton = document.querySelector("#flashButton");
   const firmwareFile = document.querySelector("#firmwareFile");
+  const firmwareVariant = document.querySelector("#firmwareVariant");
   const latestFirmwareButton = document.querySelector("#latestFirmwareButton");
   const latestFirmwareStatus = document.querySelector("#latestFirmwareStatus");
   const clearFileButton = document.querySelector("#clearFileButton");
@@ -83,6 +84,7 @@
     connectButton.disabled = operationInProgress;
     connectButton.querySelector("span").textContent = connected ? "Disconnect" : "Connect Sleepus MK3";
     firmwareFile.disabled = operationInProgress;
+    firmwareVariant.disabled = operationInProgress || !latestFirmware;
     latestFirmwareButton.disabled = operationInProgress;
     clearFileButton.disabled = operationInProgress;
     flashButton.disabled = !connected || (!selectedFile && !selectedPack) || operationInProgress;
@@ -206,17 +208,46 @@
     updateControls();
   }
 
+  function firmwareVariants(manifest) {
+    if (manifest.variants && typeof manifest.variants === "object") {
+      return Object.entries(manifest.variants).map(([key, variant]) => ({ key, ...variant }));
+    }
+    return [{ key: "latest", label: "Latest firmware", ...manifest }];
+  }
+
+  function selectedVariant() {
+    return firmwareVariants(latestFirmware).find(variant => variant.key === firmwareVariant.value);
+  }
+
+  function updateVariantStatus() {
+    const variant = selectedVariant();
+    if (!latestFirmware || !variant) return;
+    latestFirmwareStatus.textContent = `${variant.label || variant.key}: ${latestFirmware.version}`;
+  }
+
   async function discoverLatestFirmware() {
     try {
       const response = await fetch(FIRMWARE_MANIFEST_URL, { cache: "no-store" });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const manifest = await response.json();
-      if (!manifest.version || !manifest.file || !manifest.sha256 || !Number.isFinite(manifest.size)) {
-        throw new Error("Invalid firmware manifest");
+      if (!manifest.version) throw new Error("Invalid firmware manifest");
+      const variants = firmwareVariants(manifest);
+      if (!variants.length || variants.some(variant =>
+        !variant.file || !variant.sha256 || !Number.isFinite(variant.size))) {
+        throw new Error("Invalid firmware variant manifest");
       }
       latestFirmware = manifest;
-      latestFirmwareStatus.textContent = `Latest firmware: ${manifest.version}`;
+      firmwareVariant.replaceChildren();
+      for (const variant of variants) {
+        const option = document.createElement("option");
+        option.value = variant.key;
+        option.textContent = variant.label || variant.key;
+        firmwareVariant.append(option);
+      }
+      firmwareVariant.value = manifest.defaultVariant || variants[0].key;
+      updateVariantStatus();
       latestFirmwareButton.hidden = false;
+      updateControls();
     } catch (error) {
       latestFirmwareStatus.textContent = "No published release yet. Choose a local .bin file.";
       log(`Latest firmware unavailable: ${formatError(error)}`, "WARN");
@@ -224,24 +255,25 @@
   }
 
   async function selectLatestFirmware() {
-    if (!latestFirmware) return;
+    const variant = selectedVariant();
+    if (!latestFirmware || !variant) return;
     latestFirmwareButton.disabled = true;
-    latestFirmwareStatus.textContent = `Downloading ${latestFirmware.version}...`;
+    latestFirmwareStatus.textContent = `Downloading ${variant.label || variant.key}...`;
     try {
-      const firmwareUrl = new URL(`firmware/${encodeURIComponent(latestFirmware.file)}`, location.href);
+      const firmwareUrl = new URL(`firmware/${encodeURIComponent(variant.file)}`, location.href);
       const response = await fetch(firmwareUrl, { cache: "no-store" });
       if (!response.ok) throw new Error(`Firmware download failed with HTTP ${response.status}.`);
       const data = await response.arrayBuffer();
-      if (data.byteLength !== latestFirmware.size) throw new Error("Downloaded firmware size does not match its manifest.");
+      if (data.byteLength !== variant.size) throw new Error("Downloaded firmware size does not match its manifest.");
       const digest = await sha256Hex(data);
-      if (digest !== latestFirmware.sha256.toLowerCase()) throw new Error("Downloaded firmware failed SHA-256 verification.");
+      if (digest !== variant.sha256.toLowerCase()) throw new Error("Downloaded firmware failed SHA-256 verification.");
 
-      const file = new File([data], latestFirmware.file, { type: "application/octet-stream" });
-      selectFirmware(file, "Ready to install");
-      latestFirmwareStatus.textContent = `Latest firmware: ${latestFirmware.version}`;
-      log(`Selected and verified published firmware ${latestFirmware.version}.`);
+      const file = new File([data], variant.file, { type: "application/octet-stream" });
+      selectFirmware(file, `Ready to install: ${variant.label || variant.key}`);
+      latestFirmwareStatus.textContent = `${variant.label || variant.key}: ${latestFirmware.version}`;
+      log(`Selected and verified ${variant.label || variant.key} firmware ${latestFirmware.version}.`);
     } catch (error) {
-      latestFirmwareStatus.textContent = `Could not load ${latestFirmware.version}.`;
+      latestFirmwareStatus.textContent = `Could not load ${variant.label || variant.key}.`;
       log(formatError(error), "ERROR");
     } finally {
       latestFirmwareButton.disabled = false;
@@ -568,6 +600,7 @@
 
   flashButton.addEventListener("click", flashFirmware);
   latestFirmwareButton.addEventListener("click", selectLatestFirmware);
+  firmwareVariant.addEventListener("change", updateVariantStatus);
   clearConsoleButton.addEventListener("click", () => { statusConsole.value = ""; });
 
   if (navigator.usb) {
